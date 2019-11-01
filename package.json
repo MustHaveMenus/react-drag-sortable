@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://git@github.com/tom-s/react-drag-sortable.git"
+    "url": "git+https://github.com/MustHaveMenus/react-drag-sortable.git"
   },
   "keywords": [
     "react",
