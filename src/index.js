@@ -234,7 +234,10 @@ class DragSortableList extends React.Component {
     } else {
       // Dragging has just started, store original position
       state.dragging.top = target.offsetTop - parseInt(getStyle(target, 'margin-top'), 10) 
-                            - (target.parentElement && target.parentElement.parentElement ? target.parentElement.parentElement.scrollTop : 0)
+      if (target.parentElement && target.parentElement.parentElement) {
+        state.dragging.top = state.dragging.top - target.parentElement.parentElement.scrollTop
+      }
+      
       state.dragging.left = target.offsetLeft - parseInt(getStyle(target, 'margin-left'), 10)
       state.dragging.width = target.offsetWidth
       state.dragging.height = target.offsetHeight
