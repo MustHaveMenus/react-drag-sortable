@@ -222,6 +222,10 @@ class DragSortableList extends React.Component {
     state.dragging = (state.dragging) ? state.dragging : { id: dragId }
     const draggedEl = this.refs[this.ref + 'dragged']
 
+    if (state.dragging) {
+      console.log('top1: ' + state.dragging.top)
+    }
+
     // If dragging has already been started
     if(draggedEl && state.dragging) {
       // Translate dragged item
@@ -237,7 +241,8 @@ class DragSortableList extends React.Component {
       if (target.parentElement && target.parentElement.parentElement && target.parentElement.parentElement.scrollTop) {
         scrollTop = target.parentElement.parentElement.scrollTop
       }
-      state.dragging.top = target.offsetTop - parseInt(getStyle(target, 'margin-top'), 10) - scrollTop
+      state.dragging.top = target.offsetTop - scrollTop - parseInt(getStyle(target, 'margin-top'), 10)
+      console.log('top2: ' + state.dragging.top)
       state.dragging.left = target.offsetLeft - parseInt(getStyle(target, 'margin-left'), 10)
       state.dragging.width = target.offsetWidth
       state.dragging.height = target.offsetHeight
