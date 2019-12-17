@@ -233,7 +233,8 @@ class DragSortableList extends React.Component {
       draggedEl.style.webkitTransform = draggedEl.style.transform = draggedEl.style.msTransform = 'translate(' + x + 'px, ' + y + 'px)'
     } else {
       // Dragging has just started, store original position
-      state.dragging.top = target.offsetTop - target.parentElement.parentElement.scrollTop - parseInt(getStyle(target, 'margin-top'), 10)
+      state.dragging.top = target.offsetTop - parseInt(getStyle(target, 'margin-top'), 10) 
+                            - (target.parentElement && target.parentElement.parentElement ? target.parentElement.parentElement.scrollTop : 0)
       state.dragging.left = target.offsetLeft - parseInt(getStyle(target, 'margin-left'), 10)
       state.dragging.width = target.offsetWidth
       state.dragging.height = target.offsetHeight
