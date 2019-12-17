@@ -1,399 +1,527 @@
-// Tools
-import React from 'react'
-import ReactDom from 'react-dom'
-import interact from 'interactjs'
-import clone from 'lodash/clone'
-import isFunction from 'lodash/isFunction'
-import sortBy from 'lodash/sortBy'
-import get from 'lodash/get'
-import uniqueId from 'lodash/uniqueId'
-import bind from 'lodash/bind'
-import union from 'lodash/union'
-import PropTypes from 'prop-types'
+'use strict';
 
-const findDOMNode = ReactDom.findDOMNode
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-const getStyle = (e, styleName) => {
-  let styleValue = ''
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require('react-dom');
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _interactjs = require('interactjs');
+
+var _interactjs2 = _interopRequireDefault(_interactjs);
+
+var _clone = require('lodash/clone');
+
+var _clone2 = _interopRequireDefault(_clone);
+
+var _isFunction = require('lodash/isFunction');
+
+var _isFunction2 = _interopRequireDefault(_isFunction);
+
+var _sortBy = require('lodash/sortBy');
+
+var _sortBy2 = _interopRequireDefault(_sortBy);
+
+var _get = require('lodash/get');
+
+var _get2 = _interopRequireDefault(_get);
+
+var _uniqueId = require('lodash/uniqueId');
+
+var _uniqueId2 = _interopRequireDefault(_uniqueId);
+
+var _bind = require('lodash/bind');
+
+var _bind2 = _interopRequireDefault(_bind);
+
+var _union = require('lodash/union');
+
+var _union2 = _interopRequireDefault(_union);
+
+var _propTypes = require('prop-types');
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } // Tools
+
+
+var findDOMNode = _reactDom2.default.findDOMNode;
+
+var getStyle = function getStyle(e, styleName) {
+  var styleValue = '';
   if (document.defaultView && document.defaultView.getComputedStyle) {
-    styleValue = document.defaultView.getComputedStyle(e, '').getPropertyValue(styleName)
-  } else if(e.currentStyle) {
-    styleName = styleName.replace(/\-(\w)/g, (strMatch, p1) =>  p1.toUpperCase())
-    styleValue = e.currentStyle[styleName]
+    styleValue = document.defaultView.getComputedStyle(e, '').getPropertyValue(styleName);
+  } else if (e.currentStyle) {
+    styleName = styleName.replace(/\-(\w)/g, function (strMatch, p1) {
+      return p1.toUpperCase();
+    });
+    styleValue = e.currentStyle[styleName];
   }
-  return styleValue
-}
+  return styleValue || 0;
+};
 
-let _positions = {}
+var _positions = {};
 
-class DragSortableList extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
+var DragSortableList = function (_React$Component) {
+  _inherits(DragSortableList, _React$Component);
+
+  function DragSortableList(props) {
+    _classCallCheck(this, DragSortableList);
+
+    var _this = _possibleConstructorReturn(this, (DragSortableList.__proto__ || Object.getPrototypeOf(DragSortableList)).call(this, props));
+
+    _this.state = {
       placeholder: null, // target item (being dragged over)
       dragging: null, // dragged item (being dragged),
       items: []
-    }
-    this.ref = 'List' + uniqueId() // generate unique ref
+    };
+    _this.ref = 'List' + (0, _uniqueId2.default)(); // generate unique ref
+    return _this;
   }
 
-  componentDidMount() {
-    const draggableChildrenSelector = '#' + this.ref + '> .draggable'
-    const ignoreNoDrag = fun => event => {
-      const mouseElement = document.elementFromPoint(event.clientX, event.clientY)
-      if(mouseElement && !mouseElement.classList.contains('no-drag') && mouseElement.parentNode && !mouseElement.parentNode.classList.contains('no-drag')) {
-        fun(event)
-      } else {
-        interact.stop(event)
+  _createClass(DragSortableList, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      var draggableChildrenSelector = '#' + this.ref + '> .draggable';
+      var ignoreNoDrag = function ignoreNoDrag(fun) {
+        return function (event) {
+          var mouseElement = document.elementFromPoint(event.clientX, event.clientY);
+          if (mouseElement && !mouseElement.classList.contains('no-drag') && mouseElement.parentNode && !mouseElement.parentNode.classList.contains('no-drag')) {
+            fun(event);
+          } else {
+            _interactjs2.default.stop(event);
+          }
+        };
+      };
+      (0, _interactjs2.default)(draggableChildrenSelector).draggable({
+        onmove: ignoreNoDrag(this._dragMove.bind(this)),
+        onend: ignoreNoDrag(this._dragEnd.bind(this))
+      }).styleCursor(false);
+      this._initItems(this.props);
+    }
+  }, {
+    key: 'componentWillReceiveProps',
+    value: function componentWillReceiveProps(newProps) {
+      this._initItems(newProps);
+    }
+  }, {
+    key: 'componentWillUpdate',
+    value: function componentWillUpdate(nextProps, nextState) {
+      var _this2 = this;
+
+      // Store positions for animation
+      var moveTransitionDuration = this.props.moveTransitionDuration;
+      var items = this.state.items;
+
+      if (moveTransitionDuration) {
+        var itemsRefs = (0, _union2.default)(['placeholder'], items.map(function (item) {
+          return 'item-' + item.id;
+        }));
+        itemsRefs.forEach(function (itemRef) {
+          var el = _this2.refs[_this2.ref + itemRef];
+          if (el) {
+            _positions[itemRef] = {
+              left: el.offsetLeft,
+              top: el.offsetTop
+            };
+          }
+        });
       }
     }
-    interact(draggableChildrenSelector).draggable({
-      onmove: ignoreNoDrag(this._dragMove.bind(this)),
-      onend: ignoreNoDrag(this._dragEnd.bind(this)),
-    }).styleCursor(false)
-    this._initItems(this.props);
-  }
+  }, {
+    key: 'componentDidUpdate',
+    value: function componentDidUpdate(prevProps, prevState) {
+      var _this3 = this;
 
-  componentWillReceiveProps(newProps) {
-    this._initItems(newProps)
-  }
+      var moveTransitionDuration = this.props.moveTransitionDuration;
+      var items = this.state.items;
 
-  componentWillUpdate(nextProps, nextState) {
-    // Store positions for animation
-    const { moveTransitionDuration } = this.props
-    const { items } = this.state
-    if(moveTransitionDuration) {
-      const itemsRefs = union(['placeholder'], items.map(item => 'item-' + item.id))
-      itemsRefs.forEach(itemRef => {
-        const el = this.refs[this.ref  + itemRef]
-        if(el) {
-          _positions[itemRef] = {
-            left: el.offsetLeft,
-            top:  el.offsetTop
-          }
+
+      if (moveTransitionDuration) {
+        var placeholderEl = this.refs[this.ref + "placeholder"];
+        if (placeholderEl && (0, _get2.default)(prevState, 'placeholder.rank') && (0, _get2.default)(prevState, 'placeholder.rank') !== (0, _get2.default)(this.state, 'placeholder.rank')) {
+          var itemsRefs = (0, _union2.default)(['placeholder'], items.map(function (item) {
+            return 'item-' + item.id;
+          }));
+          var instructions = {
+            transitions: [],
+            transforms: []
+          };
+          itemsRefs.forEach(function (itemRef) {
+            var el = _this3.refs[_this3.ref + itemRef];
+            if (el) {
+              var x = _positions[itemRef].left - el.offsetLeft;
+              var y = _positions[itemRef].top - el.offsetTop;
+              el.style.webkitTransform = el.style.transform = el.style.msTransform = 'translate(' + x + 'px, ' + y + 'px)'; // move back to former position
+              instructions.transitions.push(function () {
+                el.style.WebkitTransition = el.style.transition = 'transform ' + moveTransitionDuration + 's';
+              });
+              instructions.transforms.push(function () {
+                el.style.webkitTransform = el.style.transform = null;
+              });
+            }
+          });
+
+          // Add all transitions and remove transforms
+          window.setTimeout(function () {
+            instructions.transitions.forEach(function (instruction) {
+              instruction();
+            });
+            instructions.transforms.forEach(function (instruction) {
+              instruction();
+            });
+          }, 100); // give it some time to make sure transform has been applied
         }
-      })
-    }
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    const { moveTransitionDuration } = this.props
-    const { items } = this.state
-
-    if(moveTransitionDuration) {
-      const placeholderEl = this.refs[this.ref  + "placeholder"]
-      if(placeholderEl && get(prevState, 'placeholder.rank') && get(prevState, 'placeholder.rank') !== get(this.state, 'placeholder.rank')) {
-        const itemsRefs = union(['placeholder'], items.map(item => 'item-' + item.id))
-        const instructions = {
-          transitions: [],
-          transforms: []
-        }
-        itemsRefs.forEach(itemRef => {
-          const el = this.refs[this.ref + itemRef]
-          if(el) {
-            const x = _positions[itemRef].left - el.offsetLeft
-            const y = _positions[itemRef].top - el.offsetTop
-            el.style.webkitTransform = el.style.transform = el.style.msTransform = 'translate(' + x + 'px, ' + y + 'px)' // move back to former position
-            instructions.transitions.push(() => {el.style.WebkitTransition = el.style.transition = 'transform ' + moveTransitionDuration + 's'})
-            instructions.transforms.push(() => {el.style.webkitTransform = el.style.transform = null})
-          }
-        })
-
-        // Add all transitions and remove transforms
-        window.setTimeout(() => {
-          instructions.transitions.forEach(instruction => {
-            instruction()
-          })
-          instructions.transforms.forEach(instruction => {
-            instruction()
-          })
-        }, 100) // give it some time to make sure transform has been applied
       }
     }
-  }
+  }, {
+    key: '_initItems',
+    value: function _initItems(props) {
+      var items = props.items;
 
-  _initItems(props) {
-    const { items } = props
-    const newItems = items.map((item, i) => {
-      item.rank = i
-      item.id = (item.id) ? item.id : uniqueId()
-      return item
-    })
-    this.setState({
-      items: newItems
-    })
-  }
+      var newItems = items.map(function (item, i) {
+        item.rank = i;
+        item.id = item.id ? item.id : (0, _uniqueId2.default)();
+        return item;
+      });
+      this.setState({
+        items: newItems
+      });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this4 = this;
 
-  render() {
-    const { placeholder, dragging, items } = this.state
-    let listItems = clone(items, true)
-    let draggedItem = null
+      var _state = this.state,
+          placeholder = _state.placeholder,
+          dragging = _state.dragging,
+          items = _state.items;
 
-    // Add drag target
-    if(placeholder) {
-      // Save dragged item
-      listItems.forEach(item => {
-        if(dragging && item.id === dragging.id) {
-          draggedItem = item // store it for display
-        }
-      })
+      var listItems = (0, _clone2.default)(items, true);
+      var draggedItem = null;
 
-      // Add placeholder
-      listItems.push(
-        {
+      // Add drag target
+      if (placeholder) {
+        // Save dragged item
+        listItems.forEach(function (item) {
+          if (dragging && item.id === dragging.id) {
+            draggedItem = item; // store it for display
+          }
+        });
+
+        // Add placeholder
+        listItems.push({
           rank: placeholder.rank,
           placeholder: draggedItem
+        });
+
+        // Sort list
+        listItems = (0, _sortBy2.default)(listItems, function (item) {
+          return item.rank;
+        });
+      }
+
+      var itemsNodes = listItems.map(function (item) {
+        if (item.placeholder) {
+          return _this4._displayItem(item.placeholder, 'placeholder');
+        } else {
+          var type = draggedItem === item ? 'dragged' : 'normal';
+          return _this4._displayItem(item, type);
         }
-      )
+      });
 
-      // Sort list
-      listItems = sortBy(listItems, (item) => item.rank)
+      return _react2.default.createElement(
+        'div',
+        { id: this.ref, className: 'List', ref: this.ref },
+        itemsNodes
+      );
     }
+  }, {
+    key: '_displayItem',
+    value: function _displayItem(item, type) {
+      var layoutType = this.props.type;
+      var id = item.id,
+          content = item.content,
+          classes = item.classes,
+          rank = item.rank;
+      var dragging = this.state.dragging;
 
-    const itemsNodes = listItems.map(item => {
-      if(item.placeholder) {
-        return this._displayItem(item.placeholder, 'placeholder')
+      var placeholder = this.props.placeholder || content;
+      var key = 'item-' + id;
+      var style = {
+        position: 'relative',
+        float: layoutType === 'horizontal' || layoutType === 'grid' ? 'left' : 'none'
+      };
+      var classNames = 'draggable';
+      classNames += classes ? ' ' + classes.join(' ') : '';
+
+      if (type === 'normal') {
+        return _react2.default.createElement(
+          'div',
+          { ref: this.ref + key, style: style, 'data-id': id, 'data-rank': rank, key: key, className: classNames },
+          content
+        );
+      }
+
+      if (type === 'dragged') {
+        style['display'] = 'none'; // to avoid flicker effect when translate happens
+        style['zIndex'] = 10; // make sur it is on top
+        classNames += ' dragged';
+        return _react2.default.createElement(
+          'div',
+          { ref: this.ref + 'dragged', 'data-id': id, key: key, className: classNames, style: style },
+          content
+        );
+      }
+
+      if (type === 'placeholder') {
+        style.width = dragging.width; // set with and height
+        style.height = dragging.height;
+        classNames += ' placeholder';
+        return _react2.default.createElement(
+          'div',
+          { ref: this.ref + 'placeholder', key: 'placeholder', className: classNames, style: style },
+          placeholder
+        );
+      }
+    }
+  }, {
+    key: '_dragMove',
+    value: function _dragMove(event) {
+      var _this5 = this;
+
+      var target = event.target;
+      var dragging = this.state.dragging;
+
+      // Move copy of dragged element and keep the dragged position in the data-x/data-y attributes
+
+      var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+      var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+      target.setAttribute('data-x', x);
+      target.setAttribute('data-y', y);
+
+      // prepare future state
+      var state = (0, _clone2.default)(this.state, true);
+      var dragId = target.getAttribute('data-id');
+      state.dragging = this.state.dragging ? this.state.dragging : { id: dragId };
+      var draggedEl = this.refs[this.ref + 'dragged'];
+
+      // If dragging has already been started
+      if (draggedEl && state.dragging) {
+        // Translate dragged item
+        draggedEl.style.display = 'block';
+        draggedEl.style.position = 'absolute';
+        draggedEl.style.top = state.dragging.top + 'px';
+        draggedEl.style.left = state.dragging.left + 'px';
+        draggedEl.style.WebkitTransition = draggedEl.style.transition = 'none'; // no transition
+        draggedEl.style.webkitTransform = draggedEl.style.transform = draggedEl.style.msTransform = 'translate(' + x + 'px, ' + y + 'px)';
       } else {
-        const type = (draggedItem === item) ? 'dragged' : 'normal'
-        return this._displayItem(item, type)
+        // Dragging has just started, store original position
+        var scrollTop = 0;
+        if (target.parentElement && target.parentElement.parentElement && target.parentElement.parentElement.scrollTop) {
+          scrollTop = target.parentElement.parentElement.scrollTop;
+        }
+        state.dragging.top = target.offsetTop - scrollTop - parseInt(getStyle(target, 'margin-top'), 10);
+        state.dragging.left = target.offsetLeft - parseInt(getStyle(target, 'margin-left'), 10);
+        state.dragging.width = target.offsetWidth;
+        state.dragging.height = target.offsetHeight;
       }
-    })
 
-    return (
-      <div id={this.ref} className="List" ref={this.ref}>
-        {itemsNodes}
-      </div>
-    )
-  }
-
-  _displayItem(item, type) {
-    const { type: layoutType } = this.props
-    const { id, content, classes, rank } = item
-    const { dragging } = this.state
-    const placeholder = this.props.placeholder || content
-    const key = 'item-' + id
-    let style = {
-      position: 'relative',
-      float: (layoutType === 'horizontal' || layoutType === 'grid') ? 'left' : 'none'
-    }
-    let classNames = 'draggable'
-    classNames += (classes) ? ' ' + classes.join(' ') : ''
-
-    if(type === 'normal') {
-      return (
-         <div ref={this.ref + key} style={style} data-id={id} data-rank={rank} key={key} className={classNames}>{content}</div>
-      )
-    }
-
-    if(type === 'dragged') {
-      style['display'] = 'none' // to avoid flicker effect when translate happens
-      style['zIndex'] = 10 // make sur it is on top
-      classNames += ' dragged'
-      return (
-         <div ref={this.ref + 'dragged'} data-id={id} key={key} className={classNames} style={style}>{content}</div>
-      )
-    }
-
-    if(type === 'placeholder') {
-      style.width = dragging.width // set with and height
-      style.height = dragging.height
-      classNames += ' placeholder'
-      return (
-        <div ref={this.ref + 'placeholder'} key={'placeholder'} className={classNames} style={style}>
-          {placeholder}
-        </div>
-      )
-    }
-  }
-
-  _dragMove(event) {
-    const target = event.target
-    const { dragging } = this.state
-
-    // Move copy of dragged element and keep the dragged position in the data-x/data-y attributes
-    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
-    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy
-    target.setAttribute('data-x', x)
-    target.setAttribute('data-y', y)
-
-    // prepare future state
-    let state = clone(this.state, true)
-    const dragId =  target.getAttribute('data-id')
-    state.dragging = (state.dragging) ? state.dragging : { id: dragId }
-    const draggedEl = this.refs[this.ref + 'dragged']
-
-    if (state.dragging) {
-      console.log('top1: ' + state.dragging.top)
-    }
-
-    // If dragging has already been started
-    if(draggedEl && state.dragging) {
-      // Translate dragged item
-      draggedEl.style.display = 'block'
-      draggedEl.style.position = 'absolute'
-      draggedEl.style.top = state.dragging.top + 'px'
-      draggedEl.style.left = state.dragging.left + 'px'
-      draggedEl.style.WebkitTransition = draggedEl.style.transition = 'none' // no transition
-      draggedEl.style.webkitTransform = draggedEl.style.transform = draggedEl.style.msTransform = 'translate(' + x + 'px, ' + y + 'px)'
-    } else {
-      // Dragging has just started, store original position
-      let scrollTop = 0
-      if (target.parentElement && target.parentElement.parentElement && target.parentElement.parentElement.scrollTop) {
-        scrollTop = target.parentElement.parentElement.scrollTop
+      // Update state if necessary and move placeholder
+      if (!dragging) {
+        this.setState(state, function () {
+          _this5._movePlaceholder(event);
+        });
+      } else {
+        this._movePlaceholder(event);
       }
-      state.dragging.top = target.offsetTop - scrollTop - parseInt(getStyle(target, 'margin-top'), 10)
-      console.log('top2: ' + state.dragging.top)
-      state.dragging.left = target.offsetLeft - parseInt(getStyle(target, 'margin-left'), 10)
-      state.dragging.width = target.offsetWidth
-      state.dragging.height = target.offsetHeight
     }
+  }, {
+    key: '_dragEnd',
+    value: function _dragEnd(event) {
+      var _props = this.props,
+          onSort = _props.onSort,
+          dropBackTransitionDuration = _props.dropBackTransitionDuration;
+      var _state2 = this.state,
+          dragging = _state2.dragging,
+          stateItems = _state2.items;
 
-    // Update state if necessary and move placeholder
-    if(!dragging) {
-      this.setState(state, () => {
-        this._movePlaceholder(event)
-      })
-    } else {
-      this._movePlaceholder(event)
-    }
-  }
+      var items = this._moveItem();
+      var draggedEl = this.refs[this.ref + 'dragged'];
 
-  _dragEnd(event) {
-    const { onSort, dropBackTransitionDuration } = this.props
-    const { dragging, items: stateItems} = this.state
-    const items = this._moveItem()
-    let draggedEl = this.refs[this.ref + 'dragged']
-
-    if(!draggedEl) return
-
-    // Add transition if rank hasn't changed
-    const draggedBefore = stateItems.find(item => item.id === dragging.id)
-    const draggedAfter = items.find(item => item.id === dragging.id)
-
-    if (draggedBefore && draggedAfter && draggedBefore.rank === draggedAfter.rank && dropBackTransitionDuration) {
-      draggedEl.style.WebkitTransition = draggedEl.style.transition = 'all ' + dropBackTransitionDuration + 's' // no transition
-    }
-
-    // Reset style
-    draggedEl.style.display =  null
-    draggedEl.style.position = 'static'
-    draggedEl.style.top = null
-    draggedEl.style.left = null
-    draggedEl.style.webkitTransform = draggedEl.style.transform = draggedEl.style.msTransform = 'none'
-    draggedEl.setAttribute('data-x', 0)
-    draggedEl.setAttribute('data-y', 0)
-
-    // Update rank
-    this.setState({
-      dragging: null,
-      placeholder: null,
-      items: items
-    })
-
-    if(onSort && isFunction(onSort)) {
-      onSort(items, event)
-    }
-  }
-
-  _moveItem() {
-    const { items: stateItems, placeholder, dragging } = this.state
-    let items = clone(stateItems, true)
-
-    // Replace dragged item rank
-    const dragged = items.find(item => item.id === dragging.id)
-    if(dragged && placeholder) dragged.rank = placeholder.rank
-
-    items = sortBy(items, (item) => {
-      return item.rank
-    })
-
-    // Normalize items ranks
-    let rank = 0
-    items.forEach(item => {
-      item.rank = rank
-      rank++
-    })
-
-    return items
-  }
-
-  _movePlaceholder(e) {
-    let { placeholder } = this.state
-    const list = this.refs[this.ref]
-    const { pageX: mouseX, pageY: mouseY } = e
-    const childNodes =  [].slice.call(list.childNodes)
-    const children = childNodes.filter(child => {
-      return !!(child.getAttribute('data-rank'))
-    })
-
-    // Find placeholder
-    let newPlaceholder
-    children.forEach(child => {
-      newPlaceholder = this._calculatePlaceholder(child, mouseX, mouseY, newPlaceholder)
-    })
-
-    // Update state if necessary
-    if(newPlaceholder && (!placeholder || newPlaceholder.rank !== placeholder.rank)) {
+      // Update rank
       this.setState({
-        placeholder: newPlaceholder
-      })
-    }
-  }
+        dragging: null,
+        placeholder: null,
+        items: items
+      });
 
-  _calculatePlaceholder(child, mouseX, mouseY, placeholder) {
-    const { type } = this.props
-    const scrollY =   window.scrollY || window.pageYOffset || document.documentElement.scrollTop
-    mouseY = mouseY - scrollY // make up for bounding rect not considering scrollY
-    const { top, left } = child.getBoundingClientRect()
-    const { offsetHeight, offsetWidth } = child
-    const childX = (left + offsetWidth / 2)
-    const childY = (top + offsetHeight / 2)
-    const distanceX = mouseX - childX
-    const distanceY = mouseY - childY
-    let difference
-    let distance
-    let rank
-    if(type === 'grid') {
-      // Skip if not on the same line
-      if(mouseY < top || mouseY > (top + offsetHeight)) {
-        return placeholder
+      if (!draggedEl) return;
+
+      // Add transition if rank hasn't changed
+      var draggedBefore = stateItems.find(function (item) {
+        return item.id === dragging.id;
+      });
+      var draggedAfter = items.find(function (item) {
+        return item.id === dragging.id;
+      });
+
+      if (draggedBefore && draggedAfter && draggedBefore.rank === draggedAfter.rank && dropBackTransitionDuration) {
+        draggedEl.style.WebkitTransition = draggedEl.style.transition = 'all ' + dropBackTransitionDuration + 's'; // no transition
       }
-      distance = Math.abs(distanceX)
-      difference = distanceX
-    } else {
-      distance = (type === 'vertical') ? Math.abs(distanceY) : Math.abs(distanceX)
-      difference = (type === 'vertical') ?  distanceY : distanceX
-    }
 
-    if(!placeholder || distance < placeholder.distance) {
+      // Reset style
+      draggedEl.style.display = null;
+      draggedEl.style.position = 'static';
+      draggedEl.style.top = null;
+      draggedEl.style.left = null;
+      draggedEl.style.webkitTransform = draggedEl.style.transform = draggedEl.style.msTransform = 'none';
+      draggedEl.setAttribute('data-x', 0);
+      draggedEl.setAttribute('data-y', 0);
 
-      const pos = (difference > 0) ? 'after' : 'before'
-      let rank = parseInt(child.getAttribute('data-rank'), 10)
-      rank += (pos === 'before') ? -0.5 : 0.5
-
-      placeholder = {
-        rank: rank,
-        distance: distance
+      if (onSort && (0, _isFunction2.default)(onSort)) {
+        onSort(items, event);
       }
     }
+  }, {
+    key: '_moveItem',
+    value: function _moveItem() {
+      var _state3 = this.state,
+          stateItems = _state3.items,
+          placeholder = _state3.placeholder,
+          dragging = _state3.dragging;
 
-    return placeholder
-  }
-}
+      var items = (0, _clone2.default)(stateItems, true);
 
+      // Replace dragged item rank
+      var dragged = items.find(function (item) {
+        return item.id === dragging.id;
+      });
+      if (dragged && placeholder) dragged.rank = placeholder.rank;
 
+      items = (0, _sortBy2.default)(items, function (item) {
+        return item.rank;
+      });
+
+      // Normalize items ranks
+      var rank = 0;
+      items.forEach(function (item) {
+        item.rank = rank;
+        rank++;
+      });
+
+      return items;
+    }
+  }, {
+    key: '_movePlaceholder',
+    value: function _movePlaceholder(e) {
+      var _this6 = this;
+
+      var placeholder = this.state.placeholder;
+
+      var list = this.refs[this.ref];
+      var mouseX = e.pageX,
+          mouseY = e.pageY;
+
+      var childNodes = [].slice.call(list.childNodes);
+      var children = childNodes.filter(function (child) {
+        return !!child.getAttribute('data-rank');
+      });
+
+      // Find placeholder
+      var newPlaceholder = void 0;
+      children.forEach(function (child) {
+        newPlaceholder = _this6._calculatePlaceholder(child, mouseX, mouseY, newPlaceholder);
+      });
+
+      // Update state if necessary
+      if (newPlaceholder && (!placeholder || newPlaceholder.rank !== placeholder.rank)) {
+        this.setState({
+          placeholder: newPlaceholder
+        });
+      }
+    }
+  }, {
+    key: '_calculatePlaceholder',
+    value: function _calculatePlaceholder(child, mouseX, mouseY, placeholder) {
+      var type = this.props.type;
+
+      var scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+      mouseY = mouseY - scrollY; // make up for bounding rect not considering scrollY
+
+      var _child$getBoundingCli = child.getBoundingClientRect(),
+          top = _child$getBoundingCli.top,
+          left = _child$getBoundingCli.left;
+
+      var offsetHeight = child.offsetHeight,
+          offsetWidth = child.offsetWidth;
+
+      var childX = left + offsetWidth / 2;
+      var childY = top + offsetHeight / 2;
+      var distanceX = mouseX - childX;
+      var distanceY = mouseY - childY;
+      var difference = void 0;
+      var distance = void 0;
+      var rank = void 0;
+      if (type === 'grid') {
+        // Skip if not on the same line
+        if (mouseY < top || mouseY > top + offsetHeight) {
+          return placeholder;
+        }
+        distance = Math.abs(distanceX);
+        difference = distanceX;
+      } else {
+        distance = type === 'vertical' ? Math.abs(distanceY) : Math.abs(distanceX);
+        difference = type === 'vertical' ? distanceY : distanceX;
+      }
+
+      if (!placeholder || distance < placeholder.distance) {
+
+        var pos = difference > 0 ? 'after' : 'before';
+        var _rank = parseInt(child.getAttribute('data-rank'), 10);
+        _rank += pos === 'before' ? -0.5 : 0.5;
+
+        placeholder = {
+          rank: _rank,
+          distance: distance
+        };
+      }
+
+      return placeholder;
+    }
+  }]);
+
+  return DragSortableList;
+}(_react2.default.Component);
 
 // Props
-DragSortableList.propTypes = {
-    items: PropTypes.array,
-    type: PropTypes.string,
-    dropBackTransitionDuration: PropTypes.number,
-    moveTransitionDuration: PropTypes.number
-}
-DragSortableList.defaultProps = {
-    items: [],
-    type: 'vertical', //horizontal
-    dropBackTransitionDuration: null
-}
 
-export default DragSortableList
+
+DragSortableList.propTypes = {
+  items: _propTypes2.default.array,
+  type: _propTypes2.default.string,
+  dropBackTransitionDuration: _propTypes2.default.number,
+  moveTransitionDuration: _propTypes2.default.number
+};
+DragSortableList.defaultProps = {
+  items: [],
+  type: 'vertical', //horizontal
+  dropBackTransitionDuration: null
+};
+
+exports.default = DragSortableList;
