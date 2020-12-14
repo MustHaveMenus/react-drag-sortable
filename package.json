@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "interactjs": "^1.2.8",
+    "linkref": "^1.1.0",
     "lodash": "^4.17.4"
   },
   "peerDependencies": {
